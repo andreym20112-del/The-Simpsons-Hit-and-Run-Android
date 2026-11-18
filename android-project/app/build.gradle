@@ -2,13 +2,19 @@ plugins {
     id 'com.android.application'
 }
 
+// --- Ajustes para compilar en GitHub Actions (build de desarrollo) ---
+// ABIs: por defecto las dos de siempre; con -PabiOnly=arm64-v8a solo una (build mas rapido)
+def abis = project.hasProperty('abiOnly') ? [project.property('abiOnly')] : ['armeabi-v7a', 'arm64-v8a']
+// Firma: si existe KEYSTORE_PATH en el entorno se firma con tu propia clave
+def ksPath = System.getenv("KEYSTORE_PATH")
+
 android {
     namespace = "org.libsdl.app"
     compileSdkVersion 35
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        applicationId "com.c4rlox.simpsons"
+        applicationId "com.c4rlox.simpsons.dev"   // distinto del original: se instala a la vez, con su propia carpeta de datos
         minSdkVersion 24
         targetSdkVersion 35
         versionCode 93
@@ -21,7 +27,7 @@ android {
                         "-DANDROID_STL=c++_shared",
                         "-DANDROID=ON",
                         "-DSRR2_REGION=PAL" // si quitamos esta linea para que no sea PAL, el juego correra la rama NTSC ya que está por defecto
-                abiFilters 'armeabi-v7a', 'arm64-v8a'
+                abiFilters(*abis)
 
             }
         }
@@ -40,8 +46,20 @@ android {
         prefab true
     }
 
+    signingConfigs {
+        if (ksPath) {
+            dev {
+                storeFile file(ksPath)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (ksPath) { signingConfig signingConfigs.dev }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
