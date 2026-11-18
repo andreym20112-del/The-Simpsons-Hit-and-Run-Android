@@ -30,7 +30,12 @@ jobs:
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358" "cmake;4.1.2"
 
+      # La validacion de wrappers se desactiva: el repo trae un gradle-wrapper.jar
+      # antiguo (Gradle 3.4, copia de SDL) que el validador no reconoce. Solo
+      # lanza la descarga de gradle-8.12 indicada en gradle-wrapper.properties.
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
 
       - name: Preparar la clave de firma
         env:
