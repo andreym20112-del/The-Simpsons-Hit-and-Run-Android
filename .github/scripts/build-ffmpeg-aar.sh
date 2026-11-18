@@ -64,11 +64,15 @@ echo "== Empaquetando el AAR con Prefab"
 AAR_DIR="$WORK/aar"
 rm -rf "$AAR_DIR"
 mkdir -p "$AAR_DIR"
+# Los nombres de modulo son los del AAR original: "headers" y "libavcodec.so", etc.
+# (el CMake del proyecto enlaza con ffmpeg::headers y ffmpeg::libavcodec.so ...)
+mkdir -p "$AAR_DIR/prefab/modules/headers"
+cp -r "$PREFIX/include" "$AAR_DIR/prefab/modules/headers/include"
+printf '{}\n' > "$AAR_DIR/prefab/modules/headers/module.json"
 for m in $MODULES; do
-  mod="$AAR_DIR/prefab/modules/$m"
+  mod="$AAR_DIR/prefab/modules/lib$m.so"
   mkdir -p "$mod/libs/android.$ABI"
   cp -L "$SRC/lib$m/lib$m.so" "$mod/libs/android.$ABI/lib$m.so"
-  cp -r "$PREFIX/include" "$mod/include"
   printf '{\n  "library_name": "lib%s"\n}\n' "$m" > "$mod/module.json"
   printf '{\n  "abi": "%s",\n  "api": %s,\n  "ndk": 28,\n  "stl": "none",\n  "static": false\n}\n' "$ABI" "$API" \
     > "$mod/libs/android.$ABI/abi.json"
