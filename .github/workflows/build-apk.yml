@@ -30,6 +30,19 @@ jobs:
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358" "cmake;4.1.2"
 
+      # El proyecto necesita com.fpliu...:ffmpeg:6.0, que no esta en Maven Central.
+      # Se compila FFmpeg 6.0.1 y se instala en ~/.m2 como AAR (se cachea entre runs).
+      - name: Cache del AAR de FFmpeg
+        id: ffcache
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/com/fpliu
+          key: ffmpeg-aar-${{ hashFiles('.github/scripts/build-ffmpeg-aar.sh') }}
+
+      - name: Compilar FFmpeg y empaquetarlo como AAR
+        if: steps.ffcache.outputs.cache-hit != 'true'
+        run: bash .github/scripts/build-ffmpeg-aar.sh
+
       # La validacion de wrappers se desactiva: el repo trae un gradle-wrapper.jar
       # antiguo (Gradle 3.4, copia de SDL) que el validador no reconoce. Solo
       # lanza la descarga de gradle-8.12 indicada en gradle-wrapper.properties.
