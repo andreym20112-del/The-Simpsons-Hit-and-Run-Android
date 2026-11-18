@@ -19,14 +19,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # Instala las herramientas de linea de comandos del SDK, acepta licencias
-      # y deja sdkmanager en el PATH.
-      - uses: android-actions/setup-android@v3
-
+      # La imagen ubuntu-24.04 ya trae el SDK de Android; se usa su sdkmanager
+      # por ruta completa (no esta siempre en el PATH).
       - name: Instalar componentes del SDK de Android
         run: |
-          sdkmanager --version
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358" "cmake;4.1.2"
+          SDKM="${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/latest/bin/sdkmanager"
+          echo "Usando: $SDKM"
+          ls -la "$SDKM"
+          "$SDKM" --version
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358" "cmake;4.1.2"
 
       - uses: gradle/actions/setup-gradle@v4
 
